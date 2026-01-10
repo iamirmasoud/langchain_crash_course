@@ -113,10 +113,3 @@ Explore the technologies like documents, embeddings, and vector stores that enab
   - `3_tool_base_tool.py`
 
 Learn about agents, how they work, and how to build custom tools to enhance their capabilities.
-
-
-
-![img.png](img.png)
-![img_1.png](img_1.png)
-
-MMR for diversifying the results when retrieving
