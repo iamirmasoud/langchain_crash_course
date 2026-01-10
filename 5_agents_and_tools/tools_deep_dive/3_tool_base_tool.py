@@ -11,7 +11,6 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
-
 load_dotenv()
 
 # Pydantic models for tool arguments

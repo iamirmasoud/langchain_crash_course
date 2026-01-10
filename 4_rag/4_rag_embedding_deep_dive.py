@@ -35,12 +35,10 @@ def create_vector_store(docs, embeddings, store_name):
     persistent_directory = os.path.join(db_dir, store_name)
     if not os.path.exists(persistent_directory):
         print(f"\n--- Creating vector store {store_name} ---")
-        Chroma.from_documents(
-            docs, embeddings, persist_directory=persistent_directory)
+        Chroma.from_documents(docs, embeddings, persist_directory=persistent_directory)
         print(f"--- Finished creating vector store {store_name} ---")
     else:
-        print(
-            f"Vector store {store_name} already exists. No need to initialize.")
+        print(f"Vector store {store_name} already exists. No need to initialize.")
 
 
 # 1. Hugging Face Transformers
@@ -49,7 +47,9 @@ def create_vector_store(docs, embeddings, store_name):
 # Note: Running Hugging Face models locally on your machine incurs no direct cost other than using your computational resources.
 # Note: Find other models at https://huggingface.co/models?other=embeddings
 print("\n--- Using Hugging Face Transformers ---")
-huggingface_embeddings_miniml = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+huggingface_embeddings_miniml = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 create_vector_store(docs, huggingface_embeddings_miniml, "chroma_db_huggingface_minilm")
 
 # 2. Hugging Face Transformers
@@ -58,7 +58,9 @@ create_vector_store(docs, huggingface_embeddings_miniml, "chroma_db_huggingface_
 # Note: Running Hugging Face models locally on your machine incurs no direct cost other than using your computational resources.
 # Note: Find other models at https://huggingface.co/models?other=embeddings
 print("\n--- Using Hugging Face Transformers ---")
-huggingface_embeddings_mpnet = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+huggingface_embeddings_mpnet = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-mpnet-base-v2"
+)
 create_vector_store(docs, huggingface_embeddings_mpnet, "chroma_db_huggingface_mpnet")
 
 print("Embedding demonstration for Hugging Face completed.")

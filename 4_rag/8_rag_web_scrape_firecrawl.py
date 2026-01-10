@@ -24,8 +24,7 @@ def create_vector_store():
 
     # Step 1: Crawl the website using FireCrawlLoader
     print("Begin crawling the website...")
-    loader = FireCrawlLoader(
-        api_key=api_key, url="https://apple.com", mode="scrape")
+    loader = FireCrawlLoader(api_key=api_key, url="https://apple.com", mode="scrape")
     docs = loader.load()
     print("Finished crawling the website.")
 
@@ -45,7 +44,9 @@ def create_vector_store():
     print(f"Sample chunk:\n{split_docs[0].page_content}\n")
 
     # Step 3: Create embeddings for the document chunks
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
 
     # Step 4: Create and persist the vector store with the embeddings
     print(f"\n--- Creating vector store in {persistent_directory} ---")
@@ -59,13 +60,11 @@ def create_vector_store():
 if not os.path.exists(persistent_directory):
     create_vector_store()
 else:
-    print(
-        f"Vector store {persistent_directory} already exists. No need to initialize.")
+    print(f"Vector store {persistent_directory} already exists. No need to initialize.")
 
 # Load the vector store with the embeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-db = Chroma(persist_directory=persistent_directory,
-            embedding_function=embeddings)
+db = Chroma(persist_directory=persistent_directory, embedding_function=embeddings)
 
 
 # Step 5: Query the vector store

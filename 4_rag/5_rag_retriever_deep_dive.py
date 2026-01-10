@@ -15,8 +15,7 @@ persistent_directory = os.path.join(db_dir, "chroma_db_with_metadata")
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # Load the existing vector store with the embedding function
-db = Chroma(persist_directory=persistent_directory,
-            embedding_function=embeddings)
+db = Chroma(persist_directory=persistent_directory, embedding_function=embeddings)
 
 
 # Function to query a vector store with different search types and parameters
@@ -54,8 +53,7 @@ query = "How did Juliet die?"
 # It finds the most similar documents to the query vector based on cosine similarity.
 # Use this when you want to retrieve the top k most similar documents.
 print("\n--- Using Similarity Search ---")
-query_vector_store("chroma_db_with_metadata", query,
-                   embeddings, "similarity", {"k": 3})
+query_vector_store("chroma_db_with_metadata", query, embeddings, "similarity", {"k": 3})
 
 # 2. Max Marginal Relevance (MMR): add diversity on the top of precision
 # This method balances between selecting documents that are relevant to the query and diverse among themselves.

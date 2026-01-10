@@ -1,5 +1,8 @@
 import os
 
+from langchain_community.document_loaders import TextLoader
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import (
     CharacterTextSplitter,
     RecursiveCharacterTextSplitter,
@@ -7,9 +10,6 @@ from langchain_text_splitters import (
     TextSplitter,
     TokenTextSplitter,
 )
-from langchain_community.document_loaders import TextLoader
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
 
 # Define the directory containing the text file
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -27,9 +27,7 @@ loader = TextLoader(file_path)
 documents = loader.load()
 
 # Define the embedding model
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
 # Function to create and persist vector store
@@ -42,8 +40,7 @@ def create_vector_store(docs, store_name):
         )
         print(f"--- Finished creating vector store {store_name} ---")
     else:
-        print(
-            f"Vector store {store_name} already exists. No need to initialize.")
+        print(f"Vector store {store_name} already exists. No need to initialize.")
 
 
 # 1. Character-based Splitting
@@ -74,8 +71,7 @@ create_vector_store(token_docs, "chroma_db_token")
 # Attempts to split text at natural boundaries (sentences, paragraphs) within character limit.
 # Balances between maintaining coherence and adhering to character limits.
 print("\n--- Using Recursive Character-based Splitting ---")
-rec_char_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000, chunk_overlap=100)
+rec_char_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 rec_char_docs = rec_char_splitter.split_documents(documents)
 create_vector_store(rec_char_docs, "chroma_db_rec_char")
 

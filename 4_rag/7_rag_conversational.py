@@ -2,13 +2,15 @@ import os
 
 from dotenv import load_dotenv
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
-from langchain_classic.chains.history_aware_retriever import create_history_aware_retriever
+from langchain_classic.chains.history_aware_retriever import (
+    create_history_aware_retriever,
+)
 from langchain_classic.chains.retrieval import create_retrieval_chain
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_community.vectorstores import Chroma
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
 # Load environment variables from .env
 load_dotenv()
@@ -110,7 +112,7 @@ def continual_chat():
         print(f"AI: {result['answer']}")
         # Update the chat history
         chat_history.append(HumanMessage(content=query))
-        chat_history.append(SystemMessage(content=result["answer"]))
+        chat_history.append(AIMessage(content=result["answer"]))
 
 
 # Main function to start the continual chat
