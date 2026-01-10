@@ -2,11 +2,12 @@
 
 # Import necessary libraries
 from dotenv import load_dotenv
-from langchain import hub
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain_classic import hub
+from langchain_classic.agents import AgentExecutor, create_react_agent
+
 from langchain.tools import tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from pydantic import BaseModel, Field
 
 # Load environment variables from .env file
 load_dotenv()

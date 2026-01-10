@@ -5,9 +5,10 @@ import os
 from typing import Type
 
 from dotenv import load_dotenv
-from langchain import hub
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain_classic import hub
+from langchain_classic.agents import AgentExecutor, create_react_agent
+
+from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 

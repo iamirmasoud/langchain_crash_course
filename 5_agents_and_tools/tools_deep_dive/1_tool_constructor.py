@@ -2,11 +2,12 @@
 
 # Import necessary libraries
 from dotenv import load_dotenv
-from langchain import hub
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain_classic import hub
+from langchain_classic.agents import AgentExecutor, create_react_agent
+
 from langchain_core.tools import StructuredTool, Tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from pydantic import BaseModel, Field
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,9 +24,19 @@ def reverse_string(text: str) -> str:
     return text[::-1]
 
 
-def concatenate_strings(a: str, b: str) -> str:
-    """Concatenates two strings."""
-    return a + b
+import re
+
+def concatenate_from_text(text: str) -> str:
+    # extract two quoted chunks (single or double quotes)
+    parts = re.findall(r"'([^']*)'|\"([^\"]*)\"", text)
+    vals = [a or b for a, b in parts]
+    if len(vals) >= 2:
+        return vals[0] + vals[1]
+    # fallback: split by comma
+    items = [x.strip() for x in text.split(",")]
+    if len(items) >= 2:
+        return items[0].strip("'\"") + items[1].strip("'\"")
+    raise ValueError("Need two strings to concatenate.")
 
 
 # Pydantic model for tool arguments
@@ -52,7 +63,7 @@ tools = [
     # Use StructuredTool for more complex functions that require multiple input parameters.
     # StructuredTool allows us to define an input schema using Pydantic, ensuring proper validation and description.
     StructuredTool.from_function(
-        func=concatenate_strings,  # Function to execute
+        func=concatenate_from_text,  # Function to execute
         name="ConcatenateStrings",  # Name of the tool
         description="Concatenates two strings.",  # Description of the tool
         args_schema=ConcatenateStringsArgs,  # Schema defining the tool's input arguments

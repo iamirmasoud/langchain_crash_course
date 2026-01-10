@@ -2,96 +2,77 @@ from dotenv import load_dotenv
 from langchain_classic import hub
 from langchain_classic.agents import create_structured_chat_agent, AgentExecutor
 from langchain_classic.memory import ConversationBufferMemory
-
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 from langchain_core.tools import Tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
-# Load environment variables from .env file
 load_dotenv()
 
-
-# Define Tools
-def get_current_time(*args, **kwargs):
-    """Returns the current time in H:MM AM/PM format."""
+def get_current_time(_input: str = "") -> str:
     import datetime
-
     now = datetime.datetime.now()
     return now.strftime("%I:%M %p")
 
-
-def search_wikipedia(query):
-    """Searches Wikipedia and returns the summary of the first result."""
+def search_wikipedia(query: str) -> str:
     from wikipedia import summary
-
     try:
-        # Limit to two sentences for brevity
         return summary(query, sentences=2)
-    except:
+    except Exception:
         return "I couldn't find any information on that."
 
-
-# Define the tools that the agent can use
 tools = [
     Tool(
-        name="Time",
+        name="current_time",
         func=get_current_time,
-        description="Useful for when you need to know the current time.",
+        description='Returns the current local time. Input must be an empty string "".',
     ),
     Tool(
         name="Wikipedia",
         func=search_wikipedia,
-        description="Useful for when you need to know information about a topic.",
+        description="Get a short Wikipedia summary for a topic. Input is the search query string.",
     ),
 ]
 
-# Load the correct JSON Chat Prompt from the hub
 prompt = hub.pull("hwchase17/structured-chat-agent")
 
-# Initialize a Hugging Face model (using Mistral)
+# ✅ Make HF generation params consistent
 llm = HuggingFaceEndpoint(
     repo_id="mistralai/Mistral-7B-Instruct-v0.2",
     task="text-generation",
-    max_new_tokens=512,
-    temperature=0.01,  # HuggingFace requires temperature > 0
+    max_new_tokens=256,
+    do_sample=True,
+    temperature=0.2,
+    return_full_text=False,
 )
 model = ChatHuggingFace(llm=llm)
 
-# Create a structured Chat Agent with Conversation Buffer Memory
-# ConversationBufferMemory stores the conversation history, allowing the agent to maintain context across interactions
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+memory.chat_memory.add_message(
+    SystemMessage(
+        content=(
+            "You are a helpful assistant. You can use tools when needed.\n"
+            "Available tools: current_time, Wikipedia."
+        )
+    )
+)
 
-# create_structured_chat_agent initializes a chat agent designed to interact using a structured prompt and tools
-# It combines the language model (llm), tools, and prompt to create an interactive agent
 agent = create_structured_chat_agent(llm=model, tools=tools, prompt=prompt)
 
-# AgentExecutor is responsible for managing the interaction between the user input, the agent, and the tools
-# It also handles memory to ensure context is maintained throughout the conversation
 agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent,
     tools=tools,
     verbose=True,
-    memory=memory,  # Use the conversation memory to maintain context
-    handle_parsing_errors=True,  # Handle any parsing errors gracefully
+    memory=memory,
+    handle_parsing_errors=True,
+    max_iterations=5,
+    early_stopping_method="force",
 )
 
-# Initial system message to set the context for the chat
-# SystemMessage is used to define a message from the system to the agent, setting initial instructions or context
-initial_message = "You are an AI assistant that can provide helpful answers using available tools.\nIf you are unable to answer, you can use the following tools: Time and Wikipedia."
-memory.chat_memory.add_message(SystemMessage(content=initial_message))
-
-# Chat Loop to interact with the user
 while True:
     user_input = input("User: ")
     if user_input.lower() == "exit":
         break
 
-    # Add the user's message to the conversation memory
-    memory.chat_memory.add_message(HumanMessage(content=user_input))
-
-    # Invoke the agent with the user input and the current chat history
+    # ✅ Do NOT manually add Human/AI messages; executor + memory handles it
     response = agent_executor.invoke({"input": user_input})
     print("Bot:", response["output"])
-
-    # Add the agent's response to the conversation memory
-    memory.chat_memory.add_message(AIMessage(content=response["output"]))
