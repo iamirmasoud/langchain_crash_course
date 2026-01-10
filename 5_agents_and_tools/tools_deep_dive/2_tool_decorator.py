@@ -1,11 +1,15 @@
 # Documentation: https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
 
 # Import necessary libraries
+from dotenv import load_dotenv
 from langchain import hub
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import tool
-from langchain_openai import ChatOpenAI
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 # Simple Tool with one parameter without args_schema
@@ -55,16 +59,22 @@ tools = [
     concatenate_strings,  # Tool with two parameters using args_schema
 ]
 
-# Initialize a ChatOpenAI model
-llm = ChatOpenAI(model="gpt-4o")
+# Initialize a Hugging Face model (using Mistral)
+llm = HuggingFaceEndpoint(
+    repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+    task="text-generation",
+    max_new_tokens=256,
+    temperature=0.01,  # HuggingFace requires temperature > 0
+)
+model = ChatHuggingFace(llm=llm)
 
-# Pull the prompt template from the hub
-prompt = hub.pull("hwchase17/openai-tools-agent")
+# Pull the prompt template from the hub (using react prompt for HuggingFace compatibility)
+prompt = hub.pull("hwchase17/react")
 
-# Create the ReAct agent using the create_tool_calling_agent function
+# Create the ReAct agent using the create_react_agent function
 # This function sets up an agent capable of calling tools based on the provided prompt.
-agent = create_tool_calling_agent(
-    llm=llm,  # Language model to use
+agent = create_react_agent(
+    llm=model,  # Language model to use
     tools=tools,  # List of tools available to the agent
     prompt=prompt,  # Prompt template to guide the agent's responses
 )

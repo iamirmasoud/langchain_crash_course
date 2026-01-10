@@ -1,11 +1,9 @@
 from dotenv import load_dotenv
-from langchain import hub
-from langchain.agents import (
-    AgentExecutor,
-    create_react_agent,
-)
+from langchain_classic import hub
+from langchain_classic.agents import create_react_agent, AgentExecutor
+
 from langchain_core.tools import Tool
-from langchain_openai import ChatOpenAI
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,12 +33,18 @@ tools = [
 # https://smith.langchain.com/hub/hwchase17/react
 prompt = hub.pull("hwchase17/react")
 
-# Initialize a ChatOpenAI model
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+# Initialize a Hugging Face model (using Mistral)
+llm = HuggingFaceEndpoint(
+    repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+    task="text-generation",
+    max_new_tokens=512,
+    temperature=0.01,  # HuggingFace requires temperature > 0
+)
+model = ChatHuggingFace(llm=llm)
 
 # Create the ReAct agent using the create_react_agent function
 agent = create_react_agent(
-    llm=llm,
+    llm=model,
     tools=tools,
     prompt=prompt,
     stop_sequence=True,
@@ -51,6 +55,7 @@ agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent,
     tools=tools,
     verbose=True,
+    handle_parsing_errors=True,  # Handle parsing errors gracefully
 )
 
 # Run the agent with a test query

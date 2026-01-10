@@ -5,11 +5,12 @@ from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import Tool
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,8 +29,10 @@ else:
         f"The directory {persistent_directory} does not exist. Please check the path."
     )
 
-# Define the embedding model
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+# Define the embedding model (using Hugging Face)
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
 # Load the existing vector store with the embedding function
 db = Chroma(persist_directory=persistent_directory, embedding_function=embeddings)
@@ -42,8 +45,14 @@ retriever = db.as_retriever(
     search_kwargs={"k": 3},
 )
 
-# Create a ChatOpenAI model
-llm = ChatOpenAI(model="gpt-4o")
+# Create a Hugging Face model (using Mistral)
+llm = HuggingFaceEndpoint(
+    repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+    task="text-generation",
+    max_new_tokens=512,
+    temperature=0.01,  # HuggingFace requires temperature > 0
+)
+model = ChatHuggingFace(llm=llm)
 
 # Contextualize question prompt
 # This system prompt helps the AI understand that it should reformulate the question
@@ -68,7 +77,7 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages(
 # Create a history-aware retriever
 # This uses the LLM to help reformulate the question based on chat history
 history_aware_retriever = create_history_aware_retriever(
-    llm, retriever, contextualize_q_prompt
+    model, retriever, contextualize_q_prompt
 )
 
 # Answer question prompt
@@ -95,7 +104,7 @@ qa_prompt = ChatPromptTemplate.from_messages(
 
 # Create a chain to combine documents for question answering
 # `create_stuff_documents_chain` feeds all retrieved context into the LLM
-question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+question_answer_chain = create_stuff_documents_chain(model, qa_prompt)
 
 # Create a retrieval chain that combines the history-aware retriever and the question answering chain
 rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
@@ -117,7 +126,7 @@ tools = [
 
 # Create the ReAct Agent with document store retriever
 agent = create_react_agent(
-    llm=llm,
+    llm=model,
     tools=tools,
     prompt=react_docstore_prompt,
 )

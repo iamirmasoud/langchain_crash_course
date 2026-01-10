@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
-from langchain import hub
-from langchain.agents import AgentExecutor, create_structured_chat_agent
-from langchain.memory import ConversationBufferMemory
+from langchain_classic import hub
+from langchain_classic.agents import create_structured_chat_agent, AgentExecutor
+from langchain_classic.memory import ConversationBufferMemory
+
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import Tool
-from langchain_openai import ChatOpenAI
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,8 +48,14 @@ tools = [
 # Load the correct JSON Chat Prompt from the hub
 prompt = hub.pull("hwchase17/structured-chat-agent")
 
-# Initialize a ChatOpenAI model
-llm = ChatOpenAI(model="gpt-4o")
+# Initialize a Hugging Face model (using Mistral)
+llm = HuggingFaceEndpoint(
+    repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+    task="text-generation",
+    max_new_tokens=512,
+    temperature=0.01,  # HuggingFace requires temperature > 0
+)
+model = ChatHuggingFace(llm=llm)
 
 # Create a structured Chat Agent with Conversation Buffer Memory
 # ConversationBufferMemory stores the conversation history, allowing the agent to maintain context across interactions
@@ -56,7 +63,7 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 
 # create_structured_chat_agent initializes a chat agent designed to interact using a structured prompt and tools
 # It combines the language model (llm), tools, and prompt to create an interactive agent
-agent = create_structured_chat_agent(llm=llm, tools=tools, prompt=prompt)
+agent = create_structured_chat_agent(llm=model, tools=tools, prompt=prompt)
 
 # AgentExecutor is responsible for managing the interaction between the user input, the agent, and the tools
 # It also handles memory to ensure context is maintained throughout the conversation
